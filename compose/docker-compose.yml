@@ -1,0 +1,102 @@
+version: '2'
+
+#volumes:
+
+services:
+
+# TODO: Fix the RE3 setup
+#  tomcat:
+#    image: eternnoir/activiti
+#    restart: always
+#    ports:
+#      - "8008:8080"
+#    volumes:
+#      - ./tomcat/jython-standalone-2.7.0.jar:/opt/tomcat/lib/jython-standalone-2.7.0.jar
+
+#
+#  memcached:
+#    restart: always
+#    image: memcached
+
+#  portalsetup:
+#    image: dhub.cantemo.com/portalbase
+#    depends_on:
+#      - portalweb
+#      - portaldb
+#      - rabbitmq
+#      - memcached
+#    command: /setup.sh
+#    volumes:
+#      - ..:/portal
+#      - ./portalbase/setup.sh:/setup.sh
+
+  portalbase:
+    image: your.registry.here/portal:latest
+    restart: always
+    environment:
+      - VIDISPINE_USERNAME=${VIDISPINE_USERNAME}
+      - VIDISPINE_PASSWORD=${VIDISPINE_PASSWORD}
+      - VIDISPINE_HOST=${VIDISPINE_HOST}
+      - VIDISPINE_PORT=${VIDISPINE_PORT}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - MEMCACHED_HOST=${MEMCACHED_HOST}
+      - MEMCACHED_PORT=${MEMCACHED_PORT}
+      - DEBUG=${DEBUG}
+      - DEVELOPMENT_SYSTEM=${DEVELOPMENT_SYSTEM}
+      - RE3_LOCAL=${RE3_LOCAL}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST}
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
+      - ELASTICSEARCH_USE_MORPHOLOGY=${ELASTICSEARCH_USE_MORPHOLOGY}
+      - NOTIFIER_HOST=${NOTIFIER_HOST}
+      - NOTIFIER_PORT=${NOTIFIER_PORT}
+      - PORTAL_CELERY_QUEUES=${PORTAL_CELERY_QUEUES}
+      - PORTAL_CELERY_NUM_WORKERS=${PORTAL_CELERY_NUM_WORKERS}
+
+  portalweb:
+    extends:
+      service: portalbase
+    depends_on:
+      - rabbitmq
+    ports:
+      - "80:80"
+    environment:
+      - PORTAL_ROLE=web
+
+  celeryd:
+    extends:
+      service: portalbase
+    depends_on:
+      - rabbitmq
+    environment:
+      - C_FORCE_ROOT=1
+      - PORTAL_ROLE=celery
+
+  celerybeat:
+    extends:
+      service: portalbase
+    depends_on:
+      - rabbitmq
+    environment:
+      - PORTAL_ROLE=beat
+
+  notifier:
+    extends:
+      service: portalbase
+    depends_on:
+      - rabbitmq
+    environment:
+      - PORTAL_ROLE=notifier
+
+  rabbitmq:
+    image: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=portal
+      - RABBITMQ_DEFAULT_PASS=p0rtal
+      - RABBITMQ_DEFAULT_VHOST=portal
