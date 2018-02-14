@@ -25,9 +25,13 @@ The following services are required for Cantemo Portal:
   alternative, also make sure you set the environment variable
   ELASTICSEARCH_USE_MORPHOLOGY to false Morphology requires a plugin
   which is not available in Amazon Elastic Search.
+* You should also prepare a docker registry if you want to run this on a
+  more complex system than a single node.
 
 In addition to these services you also need to have a download link
-for a portal installer. These can be obtained from Cantemo Support.
+for a portal installer. These can be obtained from Cantemo Support or your system integrator.
+
+A license key for Portal is required. You can obtain one from your system integrator.
 
 Building
 --------
@@ -38,10 +42,31 @@ Support.
 
 > export PORTAL_DOWNLOAD_URL=http://www2.cantemo.com/files/transfer/f1/f1d2d2f924e986ac86fdf7b36c94bcdf32beec15/RedHat7_Portal_3.3.x.tar
 
-> docker build -t portal:tag images/portal
+> docker build -t portal:latest images/portal
 
+> docker tag portal:tag your.registry.here/portal:latest
+
+> docker push your.registry.here/portal:latest
 
 Configuration
 -------------
 
-Once you have setup all the 
+Once the image is built you need to configure the runtime
+environment. This is done by copying the file compose/env-sample to compose/.env
+
+This .env file will be read by docker-compose and used to configure
+portal inside the containers. In the sample file, most of the services
+are assumed to be run as Amazon services, so the actual configuration
+parameters may vary depending on your specific setup.
+
+Running
+-------
+
+Once you have configured the docker-compose environment you can bring up the system with the commands:
+
+> cd compose
+> docker-compose -p portal up
+
+This will bring up all the portal components and you can now access
+the portal installation by going to http://your.docker.server in your browser.
+

@@ -88,6 +88,8 @@ services:
   notifier:
     extends:
       service: portalbase
+    ports:
+      - "5000:5000"
     depends_on:
       - rabbitmq
     environment:
